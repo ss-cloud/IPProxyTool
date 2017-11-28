@@ -5,6 +5,10 @@ import re
 from proxy import Proxy
 from .basespider import BaseSpider
 
+"""
+代理数量太少，禁用
+"""
+
 
 class SixSixIpSpider(BaseSpider):
     name = 'sixsixip'
@@ -34,11 +38,11 @@ class SixSixIpSpider(BaseSpider):
             if i >= 1:
                 proxy = Proxy()
                 proxy.set_value(
-                        ip = item[0],
-                        port = item[1],
-                        country = item[2],
-                        anonymity = item[3],
-                        source = self.name
+                    ip=item[0],
+                    port=item[1],
+                    country=item[2],
+                    anonymity=item[3],
+                    source=self.name
                 )
 
-                self.add_proxy(proxy = proxy)
+                self.add_proxy(proxy=proxy)

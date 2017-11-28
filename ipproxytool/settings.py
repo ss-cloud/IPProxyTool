@@ -21,12 +21,12 @@ NEWSPIDER_MODULE = 'ipproxytool.spiders'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+# CONCURRENT_REQUESTS = 20
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+# DOWNLOAD_DELAY = 10
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -34,24 +34,26 @@ ROBOTSTXT_OBEY = False
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
 
+DOWNLOAD_TIMEOUT = 10
+
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
+# DEFAULT_REQUEST_HEADERS = {
 #   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 #   'Accept-Language': 'en',
 #}
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'ipproxytool.middlewares.MyCustomSpiderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    "ipproxytool.middlewares.UserAgentMiddleware": 401,
+}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+# DOWNLOADER_MIDDLEWARES = {
 #    'ipproxytool.middlewares.MyCustomDownloaderMiddleware': 543,
 #}
 
@@ -63,7 +65,7 @@ EXTENSIONS = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
+# ITEM_PIPELINES = {
 #    'ipproxytool.pipelines.SomePipeline': 300,
 #}
 
@@ -91,3 +93,24 @@ EXTENSIONS = {
 # RETRY_ENABLED = False
 
 LOG_ENABLED = True
+# LOG
+LOG_LEVEL = "INFO"
+LOG_STDOUT = True
+LOG_FORMAT = "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s"
+# LOG_FILE = "logs/GHScrapy.log"
+LOG_SHORT_NAMES = True
+
+# MYSQL
+MYSQL_HOST = "47.92.53.161"
+MYSQL_DBNAME = "GHScrapy"
+MYSQL_PORT = 3307
+MYSQL_USER = "root"
+MYSQL_PASSWD = "Zanxing$2016"
+
+
+# MONGO
+MONGO_HOST = "47.92.53.161"
+MONGO_DBNAME = "githubseo"
+MONGO_PORT = 27017
+MONGO_USER = "githubseo"
+MONGO_PASSWD = "Zanxing$2017"

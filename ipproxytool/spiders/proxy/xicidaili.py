@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+import scrapy
 
 from proxy import Proxy
 from .basespider import BaseSpider
@@ -8,10 +9,26 @@ from scrapy.selector import Selector
 class XiCiDaiLiSpider(BaseSpider):
     name = 'xici'
 
+    base_url = "http://www.xicidaili.com/"
+
+    custom_settings = {
+        'DOWNLOAD_DELAY': 10,
+    }
+
     def __init__(self, *a, **kw):
         super(XiCiDaiLiSpider, self).__init__(*a, **kw)
 
-        self.urls = ['http://www.xicidaili.com/nn/%s' % n for n in range(1, 2)]
+        self.urls = [
+            'http://www.xicidaili.com/nn',
+            'http://www.xicidaili.com/nt',
+
+            'http://www.xicidaili.com/wn',
+            'http://www.xicidaili.com/wt',
+
+            'http://www.xicidaili.com/qq',
+        ]
+
+        # self.urls = ['http://www.xicidaili.com/nn/%s' % n for n in range(1, 2)]
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
@@ -27,10 +44,16 @@ class XiCiDaiLiSpider(BaseSpider):
         self.init()
 
     def parse_page(self, response):
-        sel = Selector(text = response.body)
+
+        next_url = response.css('a[rel="next"]::attr(href)').extract_first()
+        if next_url:
+            next_url = self.base_url + next_url
+            yield scrapy.Request(url=next_url, callback=self.parse_page)
+
+        sel = Selector(text=response.body)
         infos = sel.xpath('//tr[@class="odd"]').extract()
         for info in infos:
-            val = Selector(text = info)
+            val = Selector(text=info)
             ip = val.xpath('//td[2]/text()').extract_first()
             port = val.xpath('//td[3]/text()').extract_first()
             country = val.xpath('//td[4]/a/text()').extract_first()
@@ -38,11 +61,11 @@ class XiCiDaiLiSpider(BaseSpider):
 
             proxy = Proxy()
             proxy.set_value(
-                    ip = ip,
-                    port = port,
-                    country = country,
-                    anonymity = anonymity,
-                    source = self.name,
+                ip=ip,
+                port=port,
+                country=country,
+                anonymity=anonymity,
+                source=self.name,
             )
 
-            self.add_proxy(proxy = proxy)
+            self.add_proxy(proxy=proxy)

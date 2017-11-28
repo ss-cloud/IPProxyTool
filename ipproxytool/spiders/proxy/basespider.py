@@ -7,7 +7,19 @@ import datetime
 
 from scrapy.spiders import Spider
 from scrapy.http import Request
-from sql import SqlManager
+from pymongo import MongoClient
+
+
+# class FreeIPProxy(object):
+#     ip = CharField(unique=True)
+#     port = IntegerField()
+#     country = TextField()
+#     anonymity = IntegerField()
+#     https = CharField()
+#     speed = FloatField()
+#     source = CharField()
+#     save_time = TimestampField()
+#     vali_count = IntegerField()
 
 
 class BaseSpider(Spider):
@@ -21,7 +33,19 @@ class BaseSpider(Spider):
         self.timeout = 10
         self.is_record_web_page = False
 
-        self.sql = SqlManager()
+        # self.sql = SqlManager()
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = cls(*args, **kwargs)
+        spider._set_crawler(crawler)
+
+        db_url = "mongodb://%s:%s@%s:%d/%s" % (crawler.settings['MONGO_USER'], crawler.settings['MONGO_PASSWD'],
+                                               crawler.settings['MONGO_HOST'], crawler.settings['MONGO_PORT'], crawler.settings['MONGO_DBNAME'])
+
+        client = MongoClient(db_url)
+        spider.freeproxy = client.githubseo.freeproxy
+        return spider
 
     def init(self):
         self.meta = {
@@ -30,13 +54,13 @@ class BaseSpider(Spider):
 
         self.dir_log = 'log/proxy/%s' % self.name
         utils.make_dir(self.dir_log)
-        self.sql.init_proxy_table(config.free_ipproxy_table)
+        # self.sql.init_proxy_table(config.free_ipproxy_table)
 
     def start_requests(self):
         for i, url in enumerate(self.urls):
             yield Request(
                 url=url,
-                headers=self.headers,
+                # headers=self.headers,
                 meta=self.meta,
                 dont_filter=True,
                 callback=self.parse_page,
@@ -52,7 +76,14 @@ class BaseSpider(Spider):
         pass
 
     def add_proxy(self, proxy):
-        self.sql.insert_proxy(config.free_ipproxy_table, proxy)
+        query = {
+            'ip': proxy.ip,
+        }
+        update_set = {
+            '$set': proxy.get_dict()
+        }
+        self.freeproxy.find_one_and_update(query, update_set, upsert=True)
+        # self.sql.insert_proxy(config.free_ipproxy_table, proxy)
 
     def write(self, data):
         if self.is_record_web_page:
@@ -61,5 +92,5 @@ class BaseSpider(Spider):
                 f.write(data)
                 f.close()
 
-    def close(spider, reason):
-        spider.sql.commit()
+    # def close(spider, reason):
+    #     spider.sql.commit()

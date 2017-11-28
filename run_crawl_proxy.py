@@ -10,7 +10,7 @@ import config
 
 from sql import SqlManager
 from ipproxytool.spiders.proxy.xicidaili import XiCiDaiLiSpider
-from ipproxytool.spiders.proxy.sixsixip import SixSixIpSpider
+# from ipproxytool.spiders.proxy.sixsixip import SixSixIpSpider
 from ipproxytool.spiders.proxy.ip181 import IpOneEightOneSpider
 from ipproxytool.spiders.proxy.kuaidaili import KuaiDaiLiSpider
 from ipproxytool.spiders.proxy.gatherproxy import GatherproxySpider
@@ -31,16 +31,16 @@ if __name__ == '__main__':
         os.makedirs('log')
 
     logging.basicConfig(
-        filename = 'log/crawl_proxy.log',
-        format = '%(levelname)s %(asctime)s: %(message)s',
-        level = logging.DEBUG
+        filename='log/crawl_proxy.log',
+        format='%(levelname)s %(asctime)s: %(message)s',
+        level=logging.DEBUG
     )
 
     sql = SqlManager()
 
     spiders = [
         XiCiDaiLiSpider,
-        SixSixIpSpider,
+        # SixSixIpSpider,
         IpOneEightOneSpider,
         KuaiDaiLiSpider,  # 在访问前加了一个 js ，反爬
         GatherproxySpider,
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         sql.delete_old(config.free_ipproxy_table, 0.5)
 
         for spider in spiders:
-            scrapydo.run_spider(spider_cls = spider)
+            scrapydo.run_spider(spider_cls=spider)
 
         utils.log('*******************run spider waiting...*******************')
         time.sleep(1200)

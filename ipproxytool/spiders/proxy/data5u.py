@@ -4,6 +4,11 @@ from scrapy import Selector
 from .basespider import BaseSpider
 from proxy import Proxy
 
+"""
+代理数量太少，禁用
+"""
+
+
 class data5uSpider(BaseSpider):
     name = 'data5u'
 
@@ -12,7 +17,7 @@ class data5uSpider(BaseSpider):
         # 但有时，我们希望能同时实现父类的功能，这时，我们就需要调用父类的方法了，可通过使用 super 来实现，比如：
         super(data5uSpider, self).__init__(*a, **kw)
 
-        self.urls = ['http://www.data5u.com/free/']
+        self.urls = ['http://www.data5u.com/free/index.shtml']
         self.headers = {
             # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             # 'Accept-Encoding': 'gzip, deflate, sdch',
@@ -26,12 +31,11 @@ class data5uSpider(BaseSpider):
         self.init()
 
     def parse_page(self, response):
-        self.write(response.body)
 
         sel = Selector(response)
         infos = sel.xpath('//ul[@class="l2"]').extract()
         for i, info in enumerate(infos):
-            val = Selector(text = info)
+            val = Selector(text=info)
             ip = val.xpath('//ul[@class="l2"]/span[1]/li/text()').extract_first()
             port = val.xpath('//ul[@class="l2"]/span[2]/li/text()').extract_first()
             anonymity = val.xpath('//ul[@class="l2"]/span[3]/li/text()').extract_first()
@@ -40,11 +44,11 @@ class data5uSpider(BaseSpider):
 
             proxy = Proxy()
             proxy.set_value(
-                    ip = ip,
-                    port = port,
-                    country = country,
-                    anonymity = anonymity,
-                    source = self.name,
+                ip=ip,
+                port=port,
+                country=country,
+                anonymity=anonymity,
+                source=self.name,
             )
 
-            self.add_proxy(proxy = proxy)
+            self.add_proxy(proxy=proxy)
