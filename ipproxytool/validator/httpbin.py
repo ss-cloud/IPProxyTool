@@ -38,8 +38,6 @@ class HttpBinSpider(Validator):
 
         self.origin_ip = ''
 
-        self.init()
-
     def init(self):
         super(HttpBinSpider, self).init()
 
@@ -113,12 +111,14 @@ class HttpBinSpider(Validator):
 
                 if table == self.name:
                     if proxy.speed > self.timeout:
-                        self.sql.del_proxy_with_id(table_name=table, id=proxy.id)
+                        self.sql.del_proxy_with_id(
+                            table_name=table, id=proxy.id)
                     else:
                         self.sql.update_proxy(table_name=table, proxy=proxy)
                 else:
                     if proxy.speed < self.timeout:
-                        self.sql.insert_proxy(table_name=self.name, proxy=proxy)
+                        self.sql.insert_proxy(
+                            table_name=self.name, proxy=proxy)
             else:
                 self.sql.update_proxy(table_name=table, proxy=proxy)
 
@@ -126,7 +126,12 @@ class HttpBinSpider(Validator):
 
     def error_parse(self, failure):
         request = failure.request
+<<<<<<< HEAD:ipproxytool/spiders/validator/httpbin.py
         logging.info('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
+=======
+        self.log('error_parse value:%s url:%s meta:%s' %
+                 (failure.value, request.url, request.meta))
+>>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/httpbin.py
         https = request.meta.get('https')
         if https == 'no':
             table = request.meta.get('table')

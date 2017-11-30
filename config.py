@@ -31,3 +31,4 @@ free_ipproxy_table = 'freeproxy'
 httpbin_table = 'httpbin'
 
 data_port = 8000
+thread_num = 500

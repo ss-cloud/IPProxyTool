@@ -4,13 +4,12 @@ import time
 import datetime
 import utils
 import config
+import SimplePool
 
-from scrapy import Request
-from scrapy.spiders import Spider
 from sql import SqlManager
 
 
-class Validator(Spider):
+class Validator(object):
     name = 'base'
     concurrent_requests = 16
     retry_enabled = False
@@ -26,12 +25,17 @@ class Validator(Spider):
 
         self.sql = SqlManager()
 
+        self.threadpool = SimplePool.ThreadPool(config.thread_num)
+
+        self.init()
+
     def init(self):
         self.dir_log = 'log/validator/%s' % self.name
         utils.make_dir(self.dir_log)
 
         self.sql.init_proxy_table(self.name)
 
+<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
     @classmethod
     def update_settings(cls, settings):
         settings.setdict(cls.custom_settings or {
@@ -40,6 +44,8 @@ class Validator(Spider):
         },
             priority='spider')
 
+=======
+>>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
     def start_requests(self):
         count = self.sql.get_proxy_count(self.name)
         count_free = self.sql.get_proxy_count(config.httpbin_table)
@@ -57,6 +63,7 @@ class Validator(Spider):
 
             url = random.choice(self.urls)
             cur_time = time.time()
+<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
             yield Request(
                 url=url,
                 headers=self.headers,
@@ -71,13 +78,35 @@ class Validator(Spider):
                 callback=self.success_parse,
                 errback=self.error_parse,
             )
+=======
+
+            meta = {
+                'cur_time': cur_time,
+                'download_timeout': self.timeout,
+                'proxy_info': proxy,
+                'table': table,
+                'proxy': 'http://%s:%s' % (proxy.ip, proxy.port),
+            }
+            args = (meta)
+
+            j = SimplePool.ThreadJob(self.valid, args)
+
+            self.threadpool.add_job(j)
+
+        self.threadpool.start()
+        self.threadpool.finish()
+
+    def valid(self, meta):
+        pass
+>>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
 
     def success_parse(self, response):
         proxy = response.meta.get('proxy_info')
         table = response.meta.get('table')
 
         self.save_page(proxy.ip, response.body)
-        self.log('success_parse speed:%s meta:%s' % (time.time() - response.meta.get('cur_time'), response.meta))
+        self.log('success_parse speed:%s meta:%s' %
+                 (time.time() - response.meta.get('cur_time'), response.meta))
 
         proxy.vali_count += 1
         proxy.speed = time.time() - response.meta.get('cur_time')
@@ -103,7 +132,8 @@ class Validator(Spider):
 
     def error_parse(self, failure):
         request = failure.request
-        self.log('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
+        self.log('error_parse value:%s url:%s meta:%s' %
+                 (failure.value, request.url, request.meta))
 
         proxy = failure.request.meta.get('proxy_info')
         table = failure.request.meta.get('table')
@@ -141,7 +171,12 @@ class Validator(Spider):
             #     self.logger.error('TimeoutError on url:%s', request.url)
 
     def save_page(self, ip, data):
+<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
         filename = '{time} {ip}'.format(time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'), ip=ip)
+=======
+        filename = '{time} {ip}'.format(
+            time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'), ip=ip)
+>>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
 
         if self.is_record_web_page:
             with open('%s/%s.html' % (self.dir_log, filename), 'wb') as f:
