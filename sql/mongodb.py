@@ -11,9 +11,12 @@ from sql.sql_base import SqlBase
 
 
 class Mongodb(SqlBase):
+
     def __init__(self, **kwargs):
         super(Mongodb, self).__init__(**kwargs)
-        self.client = pymongo.MongoClient(**kwargs)
+        db_url = "mongodb://%s:%s@%s:%d/%s" % (kwargs.get('username'), kwargs.get('password'),
+                                               kwargs.get('host'), kwargs.get('port'), kwargs.get('db'))
+        self.client = pymongo.MongoClient(db_url)
         self.db = self.client[config.database]
 
     def init_database(self, database_name):
@@ -23,9 +26,13 @@ class Mongodb(SqlBase):
         pass
 
     def insert_proxy(self, table_name, proxy):
-        data = proxy.get_dict()
-        data['save_time'] = str(datetime.datetime.now())
-        self.db[table_name].insert(data)
+        query = {
+            'ip': proxy.ip,
+        }
+        update_set = {
+            '$set': proxy.get_dict()
+        }
+        self.db[table_name].find_one_and_update(query, update_set, upsert=True)
 
     def select_proxy(self, table_name, **kwargs):
         filter = {}
@@ -41,8 +48,8 @@ class Mongodb(SqlBase):
         self.db[table_name].update_one(
             {'_id': proxy.id},
             {'$set':
-                 {'https': proxy.https, 'speed': proxy.speed, 'vali_count': proxy.vali_count,
-                  'anonymity': proxy.anonymity, 'save_time': str(datetime.datetime.now())}})
+             {'https': proxy.https, 'speed': proxy.speed, 'vali_count': proxy.vali_count,
+              'anonymity': proxy.anonymity, 'save_time': str(datetime.datetime.now())}})
 
     def delete_proxy(self, table_name, proxy):
         return self.del_proxy_with_id(table_name, proxy.id)

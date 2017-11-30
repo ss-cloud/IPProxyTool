@@ -2,7 +2,7 @@
 
 DB_config = {
     # 'db_type': 'mongodb',
-    'db_type': 'mysql',
+    'db_type': 'mongodb',
 
     'mysql': {
         'host': '47.92.53.161',
@@ -18,15 +18,16 @@ DB_config = {
         'db': 1,
     },
     'mongodb': {
-        'host': 'localhost',
+        'host': '47.92.53.161',
         'port': 27017,
-        'username': '',
-        'password': '',
+        'username': 'githubseo',
+        'password': 'Zanxing$2017',
+        'db': 'githubseo',
     }
 }
 
-database = 'ipproxy'
-free_ipproxy_table = 'free_ipproxy'
+database = 'githubseo'
+free_ipproxy_table = 'freeproxy'
 httpbin_table = 'httpbin'
 
 data_port = 8000

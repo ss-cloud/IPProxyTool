@@ -4,6 +4,7 @@ import json
 import time
 import requests
 import config
+import logging
 
 from scrapy import Request
 from .validator import Validator
@@ -12,6 +13,12 @@ from .validator import Validator
 class HttpBinSpider(Validator):
     name = 'httpbin'
     concurrent_requests = 16
+
+    custom_settings = {
+        'LOG_LEVEL': 'INFO',
+        'CONCURRENT_REQUESTS': 4000,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 2000,
+    }
 
     def __init__(self, name=None, **kwargs):
         super(HttpBinSpider, self).__init__(name, **kwargs)
@@ -39,7 +46,7 @@ class HttpBinSpider(Validator):
         r = requests.get(url=self.urls[0], timeout=20)
         data = json.loads(r.text)
         self.origin_ip = data.get('origin', '')
-        self.log('origin ip:%s' % self.origin_ip)
+        logging.info('origin ip:%s' % self.origin_ip)
 
     def start_requests(self):
         count = self.sql.get_proxy_count(self.name)
@@ -87,7 +94,7 @@ class HttpBinSpider(Validator):
         if self.success_content_parse(response):
             proxy.speed = time.time() - response.meta.get('cur_time')
             proxy.vali_count += 1
-            self.log('proxy_info:%s' % (str(proxy)))
+            logging.info('proxy_info:%s' % (str(proxy)))
 
             if proxy.https == 'no':
                 data = json.loads(response.body)
@@ -119,7 +126,7 @@ class HttpBinSpider(Validator):
 
     def error_parse(self, failure):
         request = failure.request
-        self.log('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
+        logging.info('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
         https = request.meta.get('https')
         if https == 'no':
             table = request.meta.get('table')
