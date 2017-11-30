@@ -21,7 +21,6 @@ from ipproxytool.validator.jd import JDSpider
 from ipproxytool.validator.bbs import BBSSpider
 from ipproxytool.validator.zhilian import ZhiLianSpider
 from ipproxytool.validator.amazoncn import AmazonCnSpider
->>>>>> > 997be48845884793ade67b0638326e1883310ed9
 
 scrapydo.setup()
 
@@ -43,7 +42,7 @@ def validator():
     for validator in validators:
 
         popen = subprocess.Popen(
-            ['python', 'run_spider.py', validator], shell=False)
+            ['python', 'run_spider.py', validator.__module__, validator.__name__], shell=False)
         data = {
             'name': validator.name,
             'popen': popen,

@@ -1,12 +1,27 @@
 # -*- coding: utf-8 -*-
+import logging
 import random
 import time
 import datetime
 import utils
 import config
 import SimplePool
+import threading
 
+from proxy import Proxy
 from sql import SqlManager
+
+
+class ValidThread(threading.Thread):
+
+    def __init__(self, threadpool):
+        self.threadpool = threadpool
+        threading.Thread.__init__(self)
+
+    def run(self):
+        while True:
+            time.sleep(1)
+            logging.error('unfinished_tasks : %d' % self.threadpool.unfinished_tasks())
 
 
 class Validator(object):
@@ -15,7 +30,6 @@ class Validator(object):
     retry_enabled = False
 
     def __init__(self, name=None, **kwargs):
-        super(Validator, self).__init__(name, **kwargs)
 
         self.urls = []
         self.headers = None
@@ -27,78 +41,53 @@ class Validator(object):
 
         self.threadpool = SimplePool.ThreadPool(config.thread_num)
 
-        self.init()
-
     def init(self):
         self.dir_log = 'log/validator/%s' % self.name
         utils.make_dir(self.dir_log)
 
         self.sql.init_proxy_table(self.name)
 
-<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
-    @classmethod
-    def update_settings(cls, settings):
-        settings.setdict(cls.custom_settings or {
-            'CONCURRENT_REQUESTS': cls.concurrent_requests,
-            'RETRY_ENABLED': cls.retry_enabled,
-        },
-            priority='spider')
-
-=======
->>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
     def start_requests(self):
-        count = self.sql.get_proxy_count(self.name)
+        count = self.sql.get_proxy_count(config.free_ipproxy_table)
         count_free = self.sql.get_proxy_count(config.httpbin_table)
 
-        ids = self.sql.get_proxy_ids(self.name)
-        ids_httpbin = self.sql.get_proxy_ids(config.httpbin_table)
+        # ids = self.sql.get_proxy_ids(config.free_ipproxy_table)
+        # ids_httpbin = self.sql.get_proxy_ids(config.httpbin_table)
 
-        for i in range(0, count + count_free):
-            table = self.name if (i < count) else config.httpbin_table
-            id = ids[i] if i < count else ids_httpbin[i - len(ids)]
-
-            proxy = self.sql.get_proxy_with_id(table, id)
-            if proxy == None:
-                continue
-
+        for data in self.sql.select_proxy(config.free_ipproxy_table):
             url = random.choice(self.urls)
             cur_time = time.time()
-<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
-            yield Request(
-                url=url,
-                headers=self.headers,
-                meta={
-                    'cur_time': cur_time,
-                    'download_timeout': self.timeout,
-                    'proxy_info': proxy,
-                    'table': table,
-                    'proxy': 'http://%s:%s' % (proxy.ip, proxy.port),
-                },
-                dont_filter=True,
-                callback=self.success_parse,
-                errback=self.error_parse,
-            )
-=======
 
-            meta = {
-                'cur_time': cur_time,
-                'download_timeout': self.timeout,
-                'proxy_info': proxy,
-                'table': table,
-                'proxy': 'http://%s:%s' % (proxy.ip, proxy.port),
-            }
-            args = (meta)
+            proxy = Proxy()
+            proxy.set_value(
+                ip=data.get('ip'),
+                port=data.get('port'),
+                country=data.get('country'),
+                anonymity=data.get('country'),
+                https=data.get('https'),
+                speed=data.get('speed'),
+                source=data.get('source'),
+                vali_count=data.get('vali_count')
+            )
+            proxy.id = data.get('_id')
+
+            args = (
+                cur_time,
+                proxy,
+                'http://%s:%s' % (proxy.ip, proxy.port)
+            )
 
             j = SimplePool.ThreadJob(self.valid, args)
 
             self.threadpool.add_job(j)
 
+        result = ValidThread(self.threadpool)
+        result.start()
         self.threadpool.start()
         self.threadpool.finish()
 
-    def valid(self, meta):
-        pass
->>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
+    def valid(self, cur_time, proxy_info, proxy):
+        print proxy
 
     def success_parse(self, response):
         proxy = response.meta.get('proxy_info')
@@ -171,12 +160,7 @@ class Validator(object):
             #     self.logger.error('TimeoutError on url:%s', request.url)
 
     def save_page(self, ip, data):
-<<<<<<< HEAD:ipproxytool/spiders/validator/validator.py
         filename = '{time} {ip}'.format(time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'), ip=ip)
-=======
-        filename = '{time} {ip}'.format(
-            time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'), ip=ip)
->>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/validator.py
 
         if self.is_record_web_page:
             with open('%s/%s.html' % (self.dir_log, filename), 'wb') as f:

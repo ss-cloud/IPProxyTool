@@ -38,6 +38,8 @@ class HttpBinSpider(Validator):
 
         self.origin_ip = ''
 
+        # self.init()
+
     def init(self):
         super(HttpBinSpider, self).init()
 
@@ -46,41 +48,33 @@ class HttpBinSpider(Validator):
         self.origin_ip = data.get('origin', '')
         logging.info('origin ip:%s' % self.origin_ip)
 
-    def start_requests(self):
-        count = self.sql.get_proxy_count(self.name)
-        count_free = self.sql.get_proxy_count(config.free_ipproxy_table)
+    def valid(self, cur_time, proxy_info, proxy):
+        proxies = {
+            'http': proxy,
+            'https': proxy,
+        }
+        r = requests.get(url=self.urls[0], proxies=proxies, timeout=20)
+        logging.info('%s :%d' % (proxy, r.status_code))
+        if r.status_code == 200:
+            proxy_info.speed = time.time() - cur_time
+            proxy_info.vali_count += 1
+            data = json.loads(r.text)
+            origin = data.get('origin')
+            headers = data.get('headers')
+            x_forwarded_for = headers.get('X-Forwarded-For', None)
+            x_real_ip = headers.get('X-Real-Ip', None)
+            via = headers.get('Via', None)
 
-        ids = self.sql.get_proxy_ids(self.name)
-        ids_free = self.sql.get_proxy_ids(config.free_ipproxy_table)
+            if self.origin_ip in origin:
+                proxy_info.anonymity = 3
+            elif via is not None:
+                proxy_info.anonymity = 2
+            elif x_forwarded_for is not None and x_real_ip is not None:
+                proxy_info.anonymity = 1
 
-        for i in range(0, count + count_free):
-            table = self.name if (i < count) else config.free_ipproxy_table
-            id = ids[i] if i < count else ids_free[i - len(ids)]
-
-            proxy = self.sql.get_proxy_with_id(table, id)
-            if proxy == None:
-                continue
-
-            for url in self.urls:
-                https = 'yes' if 'https' in url else 'no'
-
-                yield Request(
-                    url=url,
-                    headers=self.headers,
-                    dont_filter=True,
-                    priority=0 if https == 'yes' else 10,
-                    meta={
-                        'cur_time': time.time(),
-                        'download_timeout': self.timeout,
-                        'proxy_info': proxy,
-                        'table': table,
-                        'https': https,
-                        'proxy': 'http://%s:%s' % (proxy.ip, proxy.port),
-                        'vali_count': proxy.vali_count,
-                    },
-                    callback=self.success_parse,
-                    errback=self.error_parse,
-                )
+            self.sql.insert_proxy(
+                table_name=self.name, proxy=proxy_info)
+        return False
 
     def success_parse(self, response):
         proxy = response.meta.get('proxy_info')
@@ -126,12 +120,8 @@ class HttpBinSpider(Validator):
 
     def error_parse(self, failure):
         request = failure.request
-<<<<<<< HEAD:ipproxytool/spiders/validator/httpbin.py
         logging.info('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
-=======
-        self.log('error_parse value:%s url:%s meta:%s' %
-                 (failure.value, request.url, request.meta))
->>>>>>> 997be48845884793ade67b0638326e1883310ed9:ipproxytool/validator/httpbin.py
+
         https = request.meta.get('https')
         if https == 'no':
             table = request.meta.get('table')

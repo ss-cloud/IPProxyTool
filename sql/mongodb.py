@@ -34,7 +34,7 @@ class Mongodb(SqlBase):
         }
         self.db[table_name].find_one_and_update(query, update_set, upsert=True)
 
-    def select_proxy(self, table_name, **kwargs):
+    def _select_proxy(self, table_name, **kwargs):
         filter = {}
         if kwargs.get('anonymity') != '':
             filter['anonymity'] = kwargs.get('anonymity')
@@ -43,6 +43,15 @@ class Mongodb(SqlBase):
 
         data = [item for item in self.db[table_name].find(filter).limit(int(kwargs.get('count')))]
         return data
+
+    def select_proxy(self, table_name, **kwargs):
+        filter = {}
+        if kwargs.get('anonymity') != '':
+            filter['anonymity'] = kwargs.get('anonymity')
+        if kwargs.get('https') != '':
+            filter['https'] = kwargs.get('https')
+
+        return self.db[table_name].find({})
 
     def update_proxy(self, table_name, proxy):
         self.db[table_name].update_one(
@@ -60,7 +69,7 @@ class Mongodb(SqlBase):
         pass
 
     def get_proxy_count(self, table_name):
-        count = self.db[table_name].find().count()
+        count = self.db[table_name].find({}, {'_id': 1}).count()
         logging.debug('count:%s' % count)
         return count
 
