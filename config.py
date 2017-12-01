@@ -30,5 +30,6 @@ database = 'githubseo'
 free_ipproxy_table = 'freeproxy'
 httpbin_table = 'httpbin'
 
+max_err_count = 10
 data_port = 8000
 thread_num = 500

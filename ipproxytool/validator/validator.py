@@ -21,7 +21,10 @@ class ValidThread(threading.Thread):
     def run(self):
         while True:
             time.sleep(1)
-            logging.error('unfinished_tasks : %d' % self.threadpool.unfinished_tasks())
+            unfinished_tasks = self.threadpool.unfinished_tasks()
+            logging.error('unfinished_tasks : %d' % unfinished_tasks)
+            if unfinished_tasks == 0:
+                break
 
 
 class Validator(object):
@@ -36,6 +39,7 @@ class Validator(object):
         self.timeout = 10
         self.success_status = [200]
         self.is_record_web_page = False
+        self.query = {}
 
         self.sql = SqlManager()
 
@@ -54,7 +58,8 @@ class Validator(object):
         # ids = self.sql.get_proxy_ids(config.free_ipproxy_table)
         # ids_httpbin = self.sql.get_proxy_ids(config.httpbin_table)
 
-        for data in self.sql.select_proxy(config.free_ipproxy_table):
+        logging.info('init data...')
+        for data in self.sql.db[config.free_ipproxy_table].find(self.query):
             url = random.choice(self.urls)
             cur_time = time.time()
 
@@ -67,13 +72,14 @@ class Validator(object):
                 https=data.get('https'),
                 speed=data.get('speed'),
                 source=data.get('source'),
-                vali_count=data.get('vali_count')
+                vali_count=data.get('vali_count'),
+                err_count=data.get('err_count')
             )
             proxy.id = data.get('_id')
 
             args = (
                 cur_time,
-                proxy,
+                data,
                 'http://%s:%s' % (proxy.ip, proxy.port)
             )
 

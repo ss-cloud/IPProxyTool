@@ -5,6 +5,7 @@ import time
 import requests
 import config
 import logging
+import datetime
 
 from scrapy import Request
 from .validator import Validator
@@ -38,6 +39,10 @@ class HttpBinSpider(Validator):
 
         self.origin_ip = ''
 
+        self.query = {
+            'httpbin': {'$ne': False}
+        }
+
         # self.init()
 
     def init(self):
@@ -56,8 +61,8 @@ class HttpBinSpider(Validator):
         r = requests.get(url=self.urls[0], proxies=proxies, timeout=20)
         logging.info('%s :%d' % (proxy, r.status_code))
         if r.status_code == 200:
-            proxy_info.speed = time.time() - cur_time
-            proxy_info.vali_count += 1
+            proxy_info['speed'] = time.time() - cur_time
+            proxy_info['vali_count'] += 1
             data = json.loads(r.text)
             origin = data.get('origin')
             headers = data.get('headers')
@@ -66,69 +71,44 @@ class HttpBinSpider(Validator):
             via = headers.get('Via', None)
 
             if self.origin_ip in origin:
-                proxy_info.anonymity = 3
+                proxy_info['anonymity'] = 3
             elif via is not None:
-                proxy_info.anonymity = 2
+                proxy_info['anonymity'] = 2
             elif x_forwarded_for is not None and x_real_ip is not None:
-                proxy_info.anonymity = 1
+                proxy_info['anonymity'] = 1
 
-            self.sql.insert_proxy(
-                table_name=self.name, proxy=proxy_info)
+            query = {
+                'ip': proxy_info['ip']
+            }
+            update_set = {
+                '$set': {
+                    'httpbin_vali_count': proxy_info['vali_count'],
+                    'httpbin_err_count': 0,
+                    'httpbin_vali_time': str(datetime.datetime.now()),
+                    'httpbin': True
+                }
+            }
+            self.sql.db[config.free_ipproxy_table].update(query, update_set)
+            # self.sql.insert_proxy(
+            #     table_name=self.name, proxy=proxy_info)
+        else:
+            # 如果验证次数超过最大次数，就标记False
+            query = {
+                'ip': proxy_info['ip']
+            }
+            httpbin_err_count = proxy_info.get('httpbin_err_count', 0)
+            if httpbin_err_count >= config.max_err_count:
+                update_set = {
+                    '$set': {
+                        'httpbin': False
+                    }
+                }
+            else:
+                update_set = {
+                    '$set': {
+                        'httpbin_err_count': httpbin_err_count + 1,
+                        'httpbin_vali_time': str(datetime.datetime.now()),
+                    }
+                }
+            self.sql.db[config.free_ipproxy_table].update(query, update_set)
         return False
-
-    def success_parse(self, response):
-        proxy = response.meta.get('proxy_info')
-        table = response.meta.get('table')
-        proxy.https = response.meta.get('https')
-
-        self.save_page(proxy.ip, response.body)
-
-        if self.success_content_parse(response):
-            proxy.speed = time.time() - response.meta.get('cur_time')
-            proxy.vali_count += 1
-            logging.info('proxy_info:%s' % (str(proxy)))
-
-            if proxy.https == 'no':
-                data = json.loads(response.body)
-                origin = data.get('origin')
-                headers = data.get('headers')
-                x_forwarded_for = headers.get('X-Forwarded-For', None)
-                x_real_ip = headers.get('X-Real-Ip', None)
-                via = headers.get('Via', None)
-
-                if self.origin_ip in origin:
-                    proxy.anonymity = 3
-                elif via is not None:
-                    proxy.anonymity = 2
-                elif x_forwarded_for is not None and x_real_ip is not None:
-                    proxy.anonymity = 1
-
-                if table == self.name:
-                    if proxy.speed > self.timeout:
-                        self.sql.del_proxy_with_id(
-                            table_name=table, id=proxy.id)
-                    else:
-                        self.sql.update_proxy(table_name=table, proxy=proxy)
-                else:
-                    if proxy.speed < self.timeout:
-                        self.sql.insert_proxy(
-                            table_name=self.name, proxy=proxy)
-            else:
-                self.sql.update_proxy(table_name=table, proxy=proxy)
-
-        self.sql.commit()
-
-    def error_parse(self, failure):
-        request = failure.request
-        logging.info('error_parse value:%s url:%s meta:%s' % (failure.value, request.url, request.meta))
-
-        https = request.meta.get('https')
-        if https == 'no':
-            table = request.meta.get('table')
-            proxy = request.meta.get('proxy_info')
-
-            if table == self.name:
-                self.sql.del_proxy_with_id(table_name=table, id=proxy.id)
-            else:
-                # TODO... 如果 ip 验证失败应该针对特定的错误类型，进行处理
-                pass

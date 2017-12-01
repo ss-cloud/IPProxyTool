@@ -12,6 +12,8 @@ from sql.sql_base import SqlBase
 
 class Mongodb(SqlBase):
 
+    db = None
+
     def __init__(self, **kwargs):
         super(Mongodb, self).__init__(**kwargs)
         db_url = "mongodb://%s:%s@%s:%d/%s" % (kwargs.get('username'), kwargs.get('password'),

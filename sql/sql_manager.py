@@ -6,6 +6,7 @@ from sql.sql_base import SqlBase
 
 
 class SqlManager(object):
+
     def __init__(self):
         db_type = config.DB_config.get('db_type', 'mysql')
         db_config = config.DB_config.get(db_type)
@@ -20,6 +21,7 @@ class SqlManager(object):
         elif db_type == 'mongodb':
             from sql.mongodb import Mongodb
             self.sql = Mongodb(**db_config)
+            self.db = self.sql.db
         else:  # default mysql
             from sql.mysql import MySql
             self.sql = MySql(**config.DB_config.get('db_type'))
@@ -46,19 +48,19 @@ class SqlManager(object):
         return self.sql.delete_old(table_name, day)
 
     def get_proxy_count(self, table_name):
-        return self.sql.get_proxy_count(table_name = table_name)
+        return self.sql.get_proxy_count(table_name=table_name)
 
     def get_proxy_ids(self, table_name):
-        return self.sql.get_proxy_ids(table_name = table_name)
+        return self.sql.get_proxy_ids(table_name=table_name)
 
     def get_proxy_with_id(self, table_name, id):
-        return self.sql.get_proxy_with_id(table_name = table_name, id = id)
+        return self.sql.get_proxy_with_id(table_name=table_name, id=id)
 
     def del_proxy_with_id(self, table_name, id):
-        return self.sql.del_proxy_with_id(table_name = table_name, id = id)
+        return self.sql.del_proxy_with_id(table_name=table_name, id=id)
 
     def del_proxy_with_ip(self, table_name, ip):
-        return self.sql.del_proxy_with_ip(table_name = table_name, ip = ip)
+        return self.sql.del_proxy_with_ip(table_name=table_name, ip=ip)
 
     def commit(self):
         return self.sql.commit()
