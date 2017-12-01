@@ -9,13 +9,13 @@ from proxy import Proxy
 """
 
 
-class data5uSpider(BaseSpider):
+class Data5uSpider(BaseSpider):
     name = 'data5u'
 
     def __init__(self, *a, **kw):
         # 在类的继承中，如果重定义某个方法，该方法会覆盖父类的同名方法
         # 但有时，我们希望能同时实现父类的功能，这时，我们就需要调用父类的方法了，可通过使用 super 来实现，比如：
-        super(data5uSpider, self).__init__(*a, **kw)
+        super(Data5uSpider, self).__init__(*a, **kw)
 
         self.urls = ['http://www.data5u.com/free/index.shtml']
         self.headers = {

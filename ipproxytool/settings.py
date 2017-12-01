@@ -21,7 +21,7 @@ NEWSPIDER_MODULE = 'ipproxytool.spiders'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 16
+# CONCURRENT_REQUESTS = 16
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -34,7 +34,7 @@ CONCURRENT_REQUESTS = 16
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
 
-DOWNLOAD_TIMEOUT = 10
+# DOWNLOAD_TIMEOUT = 10
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False

@@ -42,7 +42,7 @@ def validator():
     for validator in validators:
 
         popen = subprocess.Popen(
-            ['python', 'run_spider.py', validator.__module__, validator.__name__], shell=False)
+            ['python', 'run_spider.py', validator.__name__], shell=False)
         data = {
             'name': validator.name,
             'popen': popen,

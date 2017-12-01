@@ -6,7 +6,7 @@ import utils
 import datetime
 
 from scrapy.spiders import Spider
-from scrapy.http import Request
+from scrapy.http import Request, FormRequest
 from sql import SqlManager
 
 
@@ -33,6 +33,8 @@ class BaseSpider(Spider):
         self.timeout = 10
         self.is_record_web_page = False
         self.proxy = None
+        self.method = 'GET'
+        self.formdata = {}
 
         self.sql = SqlManager()
 
@@ -49,14 +51,26 @@ class BaseSpider(Spider):
 
     def start_requests(self):
         for i, url in enumerate(self.urls):
-            yield Request(
-                url=url,
-                # headers=self.headers,
-                meta=self.meta,
-                dont_filter=True,
-                callback=self.parse_page,
-                errback=self.error_parse,
-            )
+            if self.method == 'POST':
+                yield FormRequest(
+                    url=url,
+                    # headers=self.headers,
+                    formdata=self.formdata,
+                    meta=self.meta,
+                    dont_filter=True,
+                    callback=self.parse_page,
+                    errback=self.error_parse,
+                )
+            else:
+                yield Request(
+                    url=url,
+                    # headers=self.headers,
+                    method=self.method,
+                    meta=self.meta,
+                    dont_filter=True,
+                    callback=self.parse_page,
+                    errback=self.error_parse,
+                )
 
     def parse_page(self, response):
         self.write(response.body)

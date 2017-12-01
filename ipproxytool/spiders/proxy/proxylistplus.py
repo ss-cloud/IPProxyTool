@@ -5,6 +5,11 @@ from .basespider import BaseSpider
 from proxy import Proxy
 
 
+"""
+TODO 
+"""
+
+
 class ProxylistplusSpider(BaseSpider):
     name = 'proxylistplus'
 
@@ -35,7 +40,7 @@ class ProxylistplusSpider(BaseSpider):
         sel = Selector(response)
         infos = sel.xpath('//tr[@class="cells"]').extract()
         for i, info in enumerate(infos):
-            val = Selector(text = info)
+            val = Selector(text=info)
             ip = val.xpath('//td[2]/text()').extract_first()
             port = val.xpath('//td[3]/text()').extract_first()
             country = val.xpath('//td[5]/text()').extract_first()
@@ -43,11 +48,11 @@ class ProxylistplusSpider(BaseSpider):
 
             proxy = Proxy()
             proxy.set_value(
-                    ip = ip,
-                    port = port,
-                    country = country,
-                    anonymity = anonymity,
-                    source = self.name,
+                ip=ip,
+                port=port,
+                country=country,
+                anonymity=anonymity,
+                source=self.name,
             )
 
-            self.add_proxy(proxy = proxy)
+            self.add_proxy(proxy=proxy)

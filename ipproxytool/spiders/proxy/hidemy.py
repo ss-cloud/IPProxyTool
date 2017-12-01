@@ -1,54 +1,63 @@
-#-*- coding: utf-8 -*-
+# #-*- coding: utf-8 -*-
 
-import utils
+# import urllib
+# import re
+# import scrapy
+# import logging
 
-from scrapy import Selector
-from .basespider import BaseSpider
-from proxy import Proxy
+# from .basespider import BaseSpider
+# from proxy import Proxy
 
 
-class HidemySpider(BaseSpider):
-    name = 'hidemy'
+# class HidemySpider(BaseSpider):
+#     name = 'hidemy'
 
-    def __init__(self, *a, **kw):
-        super(HidemySpider, self).__init__(*a, **kw)
+#     base_url = 'https://hidemy.name'
 
-        self.urls = ['https://hidemy.name/en/proxy-list/?start=%s' % n for n in range(0, 5 * 64, 64)]
-        self.headers = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-            'Host': 'hidemy.name',
-            'Referer': 'https://hidemy.name/en/proxy-list/?start=0',
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:51.0) Gecko/20100101 Firefox/51.0',
-        }
+#     custom_settings = {
+#         'LOG_LEVEL': 'DEBUG',
+#     }
 
-        self.init()
+#     def __init__(self, *a, **kw):
+#         super(HidemySpider, self).__init__(*a, **kw)
 
-    def parse_page(self, response):
-        self.write(response.body)
+#         self.urls = ['https://hidemy.name/en/proxy-list/']
 
-        sel = Selector(response)
-        infos = sel.xpath('//tbody/tr').extract()
-        for i, info in enumerate(infos):
-            if i == 0:
-                continue
+#         self.proxy = "http://localhost:1080"
+#         self.init()
 
-            val = Selector(text = info)
-            ip = val.xpath('//td[1]/text()').extract_first()
-            port = val.xpath('//td[2]/text()').extract_first()
-            country = val.xpath('//td[3]/div/text()').extract_first()
-            anonymity = val.xpath('//td[6]/text()').extract_first()
+#     def parse_page(self, response):
+#         logging.info("parse_page :%s" % response.url)
+#         next_url = self.parse_next_url(response)
+#         if next_url:
+#             yield scrapy.Request(url=next_url, callback=self.parse_page)
 
-            proxy = Proxy()
-            proxy.set_value(
-                    ip = ip,
-                    port = port,
-                    country = country,
-                    anonymity = anonymity,
-                    source = self.name,
-            )
+#         trs = response.css('.proxy__t tbody tr')
+#         for tr in trs:
+#             tds = tr.css("td")
+#             if len(tds) != 7:
+#                 continue
 
-            self.add_proxy(proxy = proxy)
+#             ip = tds[0].xpath('script/text()').extract_first()
+#             port = tds[1].xpath('text()').extract_first()
+#             country = tds[2].xpath('div/span/text()').extract_first()
+#             anonymity = tds[5].xpath('text()').extract_first()
+
+#             proxy = Proxy()
+#             proxy.set_value(
+#                 ip=ip,
+#                 port=port,
+#                 country=country,
+#                 anonymity=anonymity,
+#                 source=self.name,
+#             )
+#             logging.info(proxy.get_dict())
+#             break
+
+#             self.add_proxy(proxy)
+
+#     def parse_next_url(self, response):
+#         next_url = response.css(u'.arrow__right a::attr(href)').extract_first()
+#         if next_url:
+#             return self.base_url + next_url
+#         return None

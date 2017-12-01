@@ -5,6 +5,10 @@ import re
 from proxy import Proxy
 from .basespider import BaseSpider
 
+"""
+TODO use proxy
+"""
+
 
 class UsProxySpider(BaseSpider):
     name = 'usproxy'
@@ -35,19 +39,19 @@ class UsProxySpider(BaseSpider):
 
     def parse_page(self, response):
         pattern = re.compile(
-		'<tr><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td.+?>(.*?)</td><td>(.*?)</td><td.+?>(.*?)</td><td.+?>(.*?)</td><td.+?>(.*?)</td></tr>',
-                re.S)
+            '<tr><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td.+?>(.*?)</td><td>(.*?)</td><td.+?>(.*?)</td><td.+?>(.*?)</td><td.+?>(.*?)</td></tr>',
+            re.S)
         items = re.findall(pattern, response.body)
 
         if items is not None:
             for item in items:
                 proxy = Proxy()
                 proxy.set_value(
-                        ip = item[0],
-                        port = item[1],
-                        country = item[3],
-                        anonymity = item[4],
-                        source = self.name,
+                    ip=item[0],
+                    port=item[1],
+                    country=item[3],
+                    anonymity=item[4],
+                    source=self.name,
                 )
 
                 self.add_proxy(proxy)
