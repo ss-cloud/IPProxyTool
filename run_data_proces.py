@@ -3,7 +3,7 @@
 import sys
 import logging
 import config
-
+import pymongo
 
 from optparse import OptionParser
 from sql import SqlManager
@@ -64,13 +64,13 @@ class DataProces(object):
 
     def doexport(self):
         out = open(self.file, 'w')
-        count_free = self.sql.get_proxy_count(config.free_ipproxy_table)
-        ids = self.sql.get_proxy_ids(config.free_ipproxy_table)
-        for i in range(0, count_free):
-            id = ids[i]
-            proxy = self.sql.get_proxy_with_id(config.free_ipproxy_table, id)
-            logging.info(proxy.get_dict())
-            p = "%s:%s\n" % (proxy.ip, proxy.port)
+        query = {
+            'httpbin': True
+        }
+        proxies = self.sql.db[config.free_ipproxy_table].find(query).sort('httpbin_vali_time', -1)
+        for proxy in proxies:
+            logging.info(proxy)
+            p = "%s:%s\n" % (proxy.get('ip'), proxy['port'])
             out.write(p)
             out.flush()
         out.close()
@@ -78,7 +78,7 @@ class DataProces(object):
 
 if __name__ == '__main__':
     usage = """usage: %prog [options] action
-    action: 
+    action:
         i import from file;
         e export to file;
 
