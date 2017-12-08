@@ -58,7 +58,10 @@ class HttpBinSpider(Validator):
             'http': proxy,
             'https': proxy,
         }
+        start_time = time.time()
         r = requests.get(url=self.urls[0], proxies=proxies, timeout=20)
+        end_time = time.time()
+        speed = end_time - start_time
         logging.info('%s :%d' % (proxy, r.status_code))
         if r.status_code == 200:
             proxy_info['speed'] = time.time() - cur_time
@@ -82,6 +85,7 @@ class HttpBinSpider(Validator):
             }
             update_set = {
                 '$set': {
+                    'httpbin_speed': speed,
                     'httpbin_vali_count': proxy_info['vali_count'],
                     'httpbin_err_count': 0,
                     'httpbin_vali_time': str(datetime.datetime.now()),
