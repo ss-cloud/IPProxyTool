@@ -41,26 +41,16 @@ def insert():
     return json.dumps(data, indent=4)
 
 
-@app.route('/select')
-def select():
+@app.route('/proxy_list')
+def proxy_list():
     sql = SqlManager()
-    name = request.args.get('name')
-    anonymity = request.args.get('anonymity', '')
-    https = request.args.get('https', '')
-    order = request.args.get('order', 'speed')
-    sort = request.args.get('sort', 'asc')
-    count = request.args.get('count', 100)
+    page_size = request.args.get('page_size', 50)
+    page = request.args.get('page', 1)
 
-    kwargs = {
-        'anonymity': anonymity,
-        'https': https,
-        'order': order,
-        'sort': sort,
-        'count': count
-    }
-    result = sql.select_proxy(name, **kwargs)
+    skip = (page - 1) * page_size
+    result = sql.db[config.free_ipproxy_table].find().limit(page_size).skip(skip)
     data = [{
-        'ip': item.get('ip'), 'port': item.get('port'),
+        'ip': item.get('ip'), 'port': item.get('port'), 'country': item.get('country', ''),
         'anonymity': item.get('anonymity'), 'https': item.get('https'),
         'speed': item.get('speed'), 'save_time': item.get('save_time', '')
     } for item in result]

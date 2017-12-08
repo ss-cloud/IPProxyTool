@@ -20,7 +20,7 @@ if __name__ == '__main__':
     utils.kill_ports([config.data_port])
 
     dataserver.app.run(
-        debug=False,
+        debug=True,
         host='127.0.0.1',
         port=config.data_port,
     )
